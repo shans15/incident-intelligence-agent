@@ -48,7 +48,7 @@ def _parse_alert(alert: str) -> tuple[str, str]:
             f"Description: {pd.description}"
         )
         return text, pd.title
-    except Exception:
+    except (json.JSONDecodeError, ValueError, TypeError):
         logger.warning("alert_not_pagerduty_json", preview=alert[:80])
         return alert, alert[:80]
 
