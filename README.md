@@ -42,7 +42,7 @@ Alert (PagerDuty JSON or plain text)
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/YOUR_USERNAME/incident-intelligence-agent
+git clone https://github.com/shans15/incident-intelligence-agent
 cd incident-intelligence-agent
 pip install -e .
 
