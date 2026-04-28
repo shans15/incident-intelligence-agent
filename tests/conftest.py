@@ -38,7 +38,9 @@ def sample_incidents():
 
 @pytest.fixture
 def in_memory_collection():
+    import uuid
     client = chromadb.EphemeralClient()
-    collection = client.get_or_create_collection("incidents_v1")
+    name = f"incidents_{uuid.uuid4().hex}"
+    collection = client.get_or_create_collection(name)
     yield collection
-    client.delete_collection("incidents_v1")
+    client.delete_collection(name)
