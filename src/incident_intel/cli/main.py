@@ -2,18 +2,12 @@ import sys
 from pathlib import Path
 
 import click
-import structlog
 
 from incident_intel.config import TriageError, get_config
 from incident_intel.core.formatter import format_report, format_similar_incidents
 from incident_intel.core.ingestor import get_collection, load_from_file
 from incident_intel.core.rca_generator import generate_rca
 from incident_intel.core.similarity_search import find_similar_incidents
-
-structlog.configure(
-    wrapper_class=structlog.make_filtering_bound_logger(20)  # INFO
-)
-logger = structlog.get_logger()
 
 
 @click.group()

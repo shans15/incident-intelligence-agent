@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-from incident_intel.config import get_config
+from incident_intel.config import TriageError, get_config
 from incident_intel.core.formatter import format_report, format_similar_incidents
 from incident_intel.core.ingestor import get_collection
 from incident_intel.core.rca_generator import generate_rca
@@ -18,11 +18,14 @@ def triage_incident(alert: str) -> str:
     Args:
         alert: Raw PagerDuty webhook JSON string or plain text incident description.
     """
-    config = get_config()
-    collection = get_collection(config.chroma_persist_dir)
-    draft = generate_rca(alert, config.api_key, config.model)
-    similar = find_similar_incidents(alert, collection)
-    return format_report(draft, similar, total_searched=collection.count())
+    try:
+        config = get_config()
+        collection = get_collection(config.chroma_persist_dir)
+        draft = generate_rca(alert, config.api_key, config.model)
+        similar = find_similar_incidents(alert, collection)
+        return format_report(draft, similar, total_searched=collection.count())
+    except TriageError as e:
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -33,15 +36,18 @@ def analyze_incident(alert: str) -> str:
     Args:
         alert: Raw PagerDuty webhook JSON string or plain text incident description.
     """
-    config = get_config()
-    draft = generate_rca(alert, config.api_key, config.model)
-    return (
-        f"# Incident Triage Report\n\n"
-        f"**Alert:** {draft.alert_title}\n"
-        f"**Generated:** {draft.generated_at}\n\n"
-        f"---\n\n"
-        f"{draft.raw_markdown}"
-    )
+    try:
+        config = get_config()
+        draft = generate_rca(alert, config.api_key, config.model)
+        return (
+            f"# Incident Triage Report\n\n"
+            f"**Alert:** {draft.alert_title}\n"
+            f"**Generated:** {draft.generated_at}\n\n"
+            f"---\n\n"
+            f"{draft.raw_markdown}"
+        )
+    except TriageError as e:
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -53,10 +59,13 @@ def find_similar(description: str, top_k: int = 3) -> str:
         description: Plain text description of the incident.
         top_k: Number of similar incidents to return (default: 3).
     """
-    config = get_config()
-    collection = get_collection(config.chroma_persist_dir)
-    similar = find_similar_incidents(description, collection, top_k)
-    return format_similar_incidents(similar, total_searched=collection.count())
+    try:
+        config = get_config()
+        collection = get_collection(config.chroma_persist_dir)
+        similar = find_similar_incidents(description, collection, top_k)
+        return format_similar_incidents(similar, total_searched=collection.count())
+    except TriageError as e:
+        return f"Error: {e}"
 
 
 if __name__ == "__main__":
