@@ -1,0 +1,102 @@
+[
+  {
+    "id": "INC-0001",
+    "title": "Redis OOM causing checkout timeouts",
+    "severity": "P1",
+    "date": "2024-11-15",
+    "summary": "Redis instance ran out of memory, causing the checkout service to fail with connection timeouts for 23 minutes.",
+    "root_cause": "Redis maxmemory limit was not configured; cache grew unbounded after a marketing campaign drove a 4x traffic spike.",
+    "resolution": "Set maxmemory to 2GB with allkeys-lru eviction policy; deployed config change and restarted Redis.",
+    "link": ""
+  },
+  {
+    "id": "INC-0002",
+    "title": "Database connection pool exhausted on orders service",
+    "severity": "P1",
+    "date": "2024-10-03",
+    "summary": "Orders service could not acquire DB connections, returning 503s to all clients for 18 minutes.",
+    "root_cause": "Connection pool size (10) was too small for the sustained traffic spike after a flash sale; slow queries held connections open longer than expected.",
+    "resolution": "Increased pool size to 50; identified and optimized two slow queries causing connection hold times.",
+    "link": ""
+  },
+  {
+    "id": "INC-0003",
+    "title": "Memory leak in user-service causing OOM kills",
+    "severity": "P2",
+    "date": "2024-09-18",
+    "summary": "user-service pods were repeatedly OOM-killed by Kubernetes, causing intermittent 502s for 45 minutes.",
+    "root_cause": "A recent PR introduced a goroutine leak in the session refresh loop; goroutines accumulated over ~6 hours until RSS exceeded the 512MB container limit.",
+    "resolution": "Rolled back the offending PR; increased memory limit temporarily to 1GB to stabilize; fixed goroutine leak in follow-up PR.",
+    "link": ""
+  },
+  {
+    "id": "INC-0004",
+    "title": "TLS certificate expiry causing auth service failures",
+    "severity": "P1",
+    "date": "2024-08-30",
+    "summary": "Authentication service returned SSL handshake errors to all clients for 12 minutes after the internal mTLS certificate expired.",
+    "root_cause": "Internal CA certificate renewed but not propagated to the auth service replica set; certificate rotation runbook was not automated.",
+    "resolution": "Manually rotated certificate; service recovered immediately after restart.",
+    "link": ""
+  },
+  {
+    "id": "INC-0005",
+    "title": "Bad config push caused payment service crash loop",
+    "severity": "P1",
+    "date": "2024-08-05",
+    "summary": "Payment service entered a crash loop immediately after a config deploy, causing 100% error rate for 8 minutes.",
+    "root_cause": "A typo in the Stripe webhook secret environment variable caused the payment service to exit on startup validation.",
+    "resolution": "Rolled back config deploy via CI/CD pipeline; validated new config in staging before re-deploying.",
+    "link": ""
+  },
+  {
+    "id": "INC-0006",
+    "title": "CDN misconfiguration causing 5xx spike on static assets",
+    "severity": "P2",
+    "date": "2024-07-22",
+    "summary": "CloudFront returned 502s for all static asset requests (images, JS, CSS) for 31 minutes after a distribution config change.",
+    "root_cause": "Origin protocol policy was changed from HTTPS-only to HTTP-only; the origin S3 bucket had HTTP access disabled.",
+    "resolution": "Reverted CloudFront distribution config to HTTPS-only; distribution deployed in ~5 minutes.",
+    "link": ""
+  },
+  {
+    "id": "INC-0007",
+    "title": "Disk full on logging host causing service degradation",
+    "severity": "P2",
+    "date": "2024-06-14",
+    "summary": "Fluentd log shipping failed across all services after the centralized logging host ran out of disk space, causing cascading write failures in app containers.",
+    "root_cause": "Log rotation policy was not applied to a new high-volume debug log added in a recent release; disk filled in 6 hours.",
+    "resolution": "Manually freed disk space; updated log rotation config; reduced debug log verbosity.",
+    "link": ""
+  },
+  {
+    "id": "INC-0008",
+    "title": "Third-party payment gateway timeout cascade",
+    "severity": "P1",
+    "date": "2024-05-29",
+    "summary": "Stripe API latency spike caused checkout timeouts, which held worker threads, which cascaded to a full checkout service outage lasting 22 minutes.",
+    "root_cause": "No circuit breaker on Stripe API calls; thread pool exhausted as workers blocked on slow Stripe responses.",
+    "resolution": "Deployed emergency timeout reduction (5s to 2s) on Stripe calls; added circuit breaker in follow-up.",
+    "link": ""
+  },
+  {
+    "id": "INC-0009",
+    "title": "Cache stampede on product catalog after deploy",
+    "severity": "P2",
+    "date": "2024-04-11",
+    "summary": "A deploy flushed the Redis product catalog cache; all requests simultaneously hit the database, causing a stampede that brought DB CPU to 100% for 9 minutes.",
+    "root_cause": "Cache warm-up was not part of the deploy runbook; keys expired simultaneously rather than with jitter.",
+    "resolution": "Restarted read replicas to shed load; added cache pre-warming step to deploy runbook and TTL jitter.",
+    "link": ""
+  },
+  {
+    "id": "INC-0010",
+    "title": "Kubernetes node OOM evictions causing pod restarts across cluster",
+    "severity": "P2",
+    "date": "2024-03-08",
+    "summary": "Multiple node-level OOM events caused batch job pods to evict application pods, resulting in intermittent 503s for 40 minutes across three services.",
+    "root_cause": "A batch data export job had no memory limits; it consumed all available memory on shared nodes, triggering kubelet eviction of lower-priority pods.",
+    "resolution": "Killed runaway batch job; added resource limits and requests to all batch jobs; separated batch and application node pools.",
+    "link": ""
+  }
+]
