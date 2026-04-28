@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "incident-intelligence-agent"
+version = "0.1.0"
+description = "Triage incidents and generate RCA drafts in under 10 seconds"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.25",
+    "chromadb>=0.5",
+    "mcp>=1.0",
+    "click>=8.0",
+    "pydantic>=2.0",
+    "tenacity>=8.0",
+    "python-dotenv>=1.0",
+    "structlog>=24.0",
+]
+
+[project.scripts]
+incident-intel = "incident_intel.cli.main:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/incident_intel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
